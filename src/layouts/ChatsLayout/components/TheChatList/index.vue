@@ -2,10 +2,10 @@
   <div class="container">
     <section class="chat-groups">
       <chat-group
-        v-for="chatGroup in chatGroups"
-        :key="chatGroup.name"
-        :chat-group="chatGroup"
-        :filled="chatGroup.name === 'Fila'"
+        v-for="group in groups"
+        :key="group.name"
+        :chat-group="group"
+        :filled="group.name === 'Fila'"
         :disabled="disabled"
       />
     </section>
@@ -22,6 +22,7 @@
 </template>
 
 <script>
+import Room from '@/api/resources/room';
 import { mapState } from 'vuex';
 
 import ChatGroup from './ChatGroup';
@@ -40,13 +41,26 @@ export default {
     },
   },
 
+  async mounted() {
+    if (this.groups.length === 0) {
+      const response = await Room.all();
+      const rooms = response.results;
+
+      const group = {
+        name: 'Chats abertos',
+        chats: [{ ...rooms[0], username: 'João da Silva', messages: [] }],
+      };
+      this.$store.commit('chats/addChatGroup', group);
+    }
+  },
+
   data: () => ({
     tag: '',
   }),
 
   computed: {
     ...mapState({
-      chatGroups: (state) => state.chats.chats,
+      groups: (state) => state.chats.chats,
     }),
     isActiveChatView() {
       return ['home', 'chat'].includes(this.$route.name);

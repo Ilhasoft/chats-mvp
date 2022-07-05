@@ -56,6 +56,7 @@
 </template>
 
 <script>
+import http from '@/api/http';
 import { mapState } from 'vuex';
 
 import ChatsLayout from '@/layouts/ChatsLayout';
@@ -89,6 +90,28 @@ export default {
 
   mounted() {
     this.setActiveChat(this.id);
+
+    const token = process.env.VUE_APP_CHATS_API_TOKEN;
+    console.log(token);
+
+    const url = new URL(`ws://localhost:8000/ws/agent/rooms/?Token=${token}`);
+    const ws = new WebSocket(url);
+    ws.onmessage = (msg) => {
+      const message = JSON.parse(JSON.parse(msg.data));
+
+      if (message.action !== 'msg.create') return;
+
+      this.$store.commit('chats/addChatMessage', { message });
+    };
+    ws.onclose = () => {
+      console.log('on close');
+    };
+    ws.onopen = () => {
+      console.log('on open');
+    };
+    ws.onerror = () => {
+      console.log('on error');
+    };
   },
 
   data: () => ({
@@ -169,7 +192,15 @@ export default {
 
       if (!message) return;
 
-      await this.$store.dispatch('chats/sendMessage', message);
+      await http.post('/msg/', {
+        text: message,
+        seen: false,
+        room: 1,
+        user: 1,
+        contact: null,
+      });
+
+      // await this.$store.dispatch('chats/sendMessage', message);
 
       this.scrollMessagesToBottom();
     },

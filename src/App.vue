@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <connect-layout>
+    <router-view v-if="isContactView" />
+
+    <connect-layout v-else>
       <router-view />
     </connect-layout>
   </div>
@@ -14,6 +16,12 @@ export default {
 
   components: {
     ConnectLayout,
+  },
+
+  computed: {
+    isContactView() {
+      return this.$route.name === 'contact';
+    },
   },
 };
 </script>
